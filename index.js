@@ -9,18 +9,19 @@ let columnsTab;
 let cardsTab;
 let tagsTab;
 let selectedTags = [];
-let tagColors = ["bg-red-100", "bg-green-100", "bg-blue-100", "bg-yellow-100", "bg-purple-100", "bg-pink-100"];
-let selectedTagColors = ["bg-red-300", "bg-green-300", "bg-blue-300", "bg-yellow-300", "bg-purple-300", "bg-pink-300"];
+let tagColors = ["bg-red-200", "bg-green-200", "bg-blue-200", "bg-yellow-100", "bg-purple-200", "bg-pink-200"];
+let selectedTagColors = ["bg-red-300", "bg-green-300", "bg-blue-300", "bg-yellow-200", "bg-purple-300", "bg-pink-300"];
 
 const columnContainer = document.getElementById("columnContainer");
 
 const addCardModal = document.getElementById("addCardModal");
 const closeAddCardModalBtn = document.getElementById("closeAddCardModalBtn");
 const addCardForm = document.getElementById("addCardForm");
+const addCardSubmitBtn = document.getElementById("createCardBtn");
 
 const addColModal = document.getElementById("addColModal");
 const closeAddColModalBtn = document.getElementById("closeAddColModalBtn");
-const addColForm = document.getElementById("addCardForm");
+const addColForm = document.getElementById("addColForm");
 
 const existingTagsContainer = document.getElementById("existingTagsContainer");
 const newTagInput = document.getElementById("newTagInput");
@@ -70,7 +71,8 @@ request.onupgradeneeded = () => {
         keyPath: "id"
     });
 
-    tagsStore.createIndex("tagId", "tagId", { unique: false });
+    tagsStore.createIndex("tagId", "tagId", { unique: true });
+    tagsStore.createIndex("name", "name", { unique: true });
 
     seedDefaultColumns(columnsStore, cardsStore, tagsStore);
 }
@@ -269,8 +271,8 @@ function renderTagButtons() {
         const isSelected = selectedTags.includes(tag.id);
 
         button.className = isSelected
-            ? `border-2 border-black rounded px-2 py-1 cursor-pointer ${selectedTagColors[tagsTab.indexOf(tag) % selectedTagColors.length]}`
-            : `border-2 rounded px-2 py-1 cursor-pointer ${tagColors[tagsTab.indexOf(tag) % tagColors.length]}`;
+            ? `border-2 border-black rounded px-2 py-1 m-1 cursor-pointer focus:opacity-70 ${selectedTagColors[tagsTab.indexOf(tag) % selectedTagColors.length]}`
+            : `border-2 rounded px-2 py-1 m-1 cursor-pointer focus:opacity-70 ${tagColors[tagsTab.indexOf(tag) % tagColors.length]}`;
 
         button.addEventListener("click", () => {
             if (selectedTags.includes(tag.id)) {
@@ -306,6 +308,7 @@ async function renderBoard() {
     columnsTab.forEach(column => {
         const columnEl = createColumnElement(column);
         columnEl.dataset.columnId = column.id;
+
         cardsTab.forEach(card => {
             if (card.columnId === column.id) {
                 const cardEl = createCardElement(card);
@@ -355,7 +358,7 @@ function createColumnElement(column) {
 
     addCardBtn.addEventListener("click", () => {
         openModal(addCardModal, addCardForm, closeAddCardModalBtn);
-        addCardForm.columnSelect.value = column.id;
+        addCardForm.dataset.columnId = column.id;
     });
 
     return columnDiv;
@@ -433,27 +436,47 @@ addNewTagBtn.addEventListener("click", () => {
         id: crypto.randomUUID(),
         name: tagName,
     };
+    const transaction = db.transaction("tags", "readwrite");
+    const store = transaction.objectStore("tags");
 
-    allTags.push(newTag);
+    const request = store.add(newTag);
     selectedTags.push(newTag.id);
 
-    newTagInput.value = "";
-    renderTagButtons();
+    request.onsuccess = () => {
+        newTagInput.value = "";
+        loadBoardData().then(() => {
+            renderTagButtons();
+        });
+    };
+
+    request.onerror = () => {
+        const bgcolor = "bg-red-200";
+        newTagInput.classList.add(bgcolor);
+        setTimeout(() => {
+            newTagInput.classList.remove(bgcolor);
+        }, 500);
+    };
 });
 
 addCardForm.addEventListener("submit", (event) => {
     event.preventDefault();
+});
+
+addCardSubmitBtn.addEventListener("click", (event) => {
+    event.preventDefault();
 
     const newCard = {
-        ID: crypto.randomUUID(),
-        columnId: addCardForm.columnSelect.value,
+        id: crypto.randomUUID(),
+        columnId: addCardForm.dataset.columnId,
         title: addCardForm.title.value,
         description: addCardForm.description.value,
-        time: Number(document.getElementById("timeInput").value),
+        time: Number(addCardForm.timeSlots.value),
         tagIds: selectedTags,
     };
+    const transaction = db.transaction("cards", "readwrite");
+    const store = transaction.objectStore("cards");
 
-    cardTab.add(newCard);
+    store.add(newCard);
 
     renderBoard();
     closeModal(addCardModal);

@@ -27,15 +27,13 @@
             <form id="addCardForm" class="flex flex-col gap-4">
                 <div>
                     <label for="cardTitleInput" class="font-semibold">Title</label>
-                    <input id="cardTitleInput" type="text" required
+                    <input id="cardTitleInput" name="title" type="text" required
                         class="w-full mt-1 p-2 border-2 border-gray-300 rounded-lg" />
                 </div>
 
                 <div>
-                    <label for="cardDescriptionInput" class="font-semibold">
-                        Description
-                    </label>
-                    <textarea id="cardDescriptionInput" class="w-full mt-1 p-2 border-2 border-gray-300 rounded-lg"
+                    <label for="cardDescriptionInput" class="font-semibold">Description</label>
+                    <textarea id="cardDescriptionInput" name="description" class="w-full mt-1 p-2 border-2 border-gray-300 rounded-lg"
                         rows="3"></textarea>
                 </div>
 
@@ -43,7 +41,7 @@
                     <label for="cardTimeInput" class="font-semibold">
                         15-minute blocks
                     </label>
-                    <input id="cardTimeInput" type="number" min="1" value="1" required
+                    <input id="cardTimeInput" name="timeSlots" type="number" min="1" value="1" required
                         class="w-full mt-1 p-2 border-2 border-gray-300 rounded-lg" />
                 </div>
 
@@ -65,7 +63,7 @@
                     </div>
                 </div>
 
-                <button type="submit" class="bg-sky-300 border-3 border-black rounded-xl p-3 font-bold cursor-pointer">
+                <button id="createCardBtn" type="submit" class="bg-sky-300 border-3 border-black rounded-xl p-3 font-bold cursor-pointer">
                     Create Card
                 </button>
             </form>
@@ -82,7 +80,7 @@
                 </button>
             </div>
 
-            <form id="addCardForm" class="flex flex-col gap-4">
+            <form id="addColForm" class="flex flex-col gap-4">
                 <div>
                     <label for="colTitleInput" class="font-semibold">Category Name</label>
                     <input id="colTitleInput" type="text" required

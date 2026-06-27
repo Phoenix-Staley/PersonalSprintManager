@@ -23,6 +23,10 @@ const existingTagsContainer = document.getElementById("existingTagsContainer");
 const newTagInput = document.getElementById("newTagInput");
 const addNewTagBtn = document.getElementById("addNewTagBtn");
 
+let draggedElement = null;
+let dragOffsetX = 0;
+let dragOffsetY = 0;
+
 const request = indexedDB.open(DB_NAME, DB_VERSION);
 
 request.onerror = () => {
@@ -160,6 +164,92 @@ async function loadBoardData() {
     tagsTab = await getAllFromStore("tags");
 }
 
+function startDrag(event) {
+    draggedElement = event.currentTarget;
+
+    const rect = draggedElement.getBoundingClientRect();
+
+    dragOffsetX = event.clientX - rect.left;
+    dragOffsetY = event.clientY - rect.top;
+
+    draggedElement.setPointerCapture(event.pointerId);
+
+    draggedElement.style.width = `${rect.width}px`;
+    draggedElement.style.position = "fixed";
+    draggedElement.style.left = `${event.clientX - dragOffsetX}px`;
+    draggedElement.style.top = `${event.clientY - dragOffsetY}px`;
+    draggedElement.style.zIndex = "100";
+    draggedElement.style.pointerEvents = "none";
+
+    draggedElement.classList.remove("cursor-grab");
+    draggedElement.classList.add("cursor-grabbing", "opacity-80");
+
+    document.addEventListener("pointermove", moveDrag);
+    document.addEventListener("pointerup", endDrag);
+}
+
+function moveDrag(event) {
+    if (!draggedElement) return;
+
+    draggedElement.style.left = `${event.clientX - dragOffsetX}px`;
+    draggedElement.style.top = `${event.clientY - dragOffsetY}px`;
+}
+
+function endDrag(event) {
+    if (!draggedElement) return;
+
+    const dropTarget = document.elementFromPoint(event.clientX, event.clientY);
+    const target = dropTarget?.closest("[data-column-id]");
+    console.info(dropTarget);
+
+    draggedElement.style.position = "";
+    draggedElement.style.left = "";
+    draggedElement.style.top = "";
+    draggedElement.style.width = "";
+    draggedElement.style.zIndex = "";
+    draggedElement.style.pointerEvents = "";
+
+    draggedElement.classList.remove("cursor-grabbing", "opacity-80");
+    draggedElement.classList.add("cursor-grab");
+
+    if (target) {
+        const newColId = target.CDATA_SECTION_NODE.columnId;
+        const cardId = draggedElement.dataset.cardId;
+
+        target.appendChild(draggedElement);
+
+        const cardData = cardsTab.find((card) => card.id === cardId);
+        if (cardData) {
+            const cardsStore = getStore("cards");
+            const getRequest = cardsStore.get(cardId);
+
+            getRequest.onsuccess = () => {
+                // const card = getRequest.result;
+
+                // if (!card) {
+                //     console.error("Card not found:", cardId);
+                //     return;
+                // }
+
+                cardData.columnId = newColId;
+
+                const putRequest = cardsStore.put(card);
+
+                putRequest.onerror = () => {
+                    console.error("Failed to save moved card:", putRequest.error);
+                    return;
+                }
+
+                renderBoard();
+            }
+
+            getRequest.onerror = () => {
+                console.error("Failed to get card:", getRequest.error);
+            }
+        }
+    }
+}
+
 function renderTagButtons() {
     existingTagsContainer.innerHTML = "";
 
@@ -205,10 +295,15 @@ function renderBoard() {
     columnContainer.innerHTML = "";
     columnsTab.forEach(column => {
         const columnEl = createColumnElement(column);
+        columnEl.dataset.columnId = column.id;
         cardsTab.forEach(card => {
             if (card.columnId === column.id) {
                 const cardEl = createCardElement(card);
+                cardEl.dataset.cardId = card.id;
                 columnEl.appendChild(cardEl);
+                cardEl.addEventListener("pointerdown", (event) => {
+                    startDrag(event);
+                });
             }
         })
         columnContainer.appendChild(columnEl);
@@ -317,7 +412,7 @@ function createCardElement(cardData) {
     // Card container
     const card = document.createElement("div");
     card.id = `card-${++cardCtn}`;
-    card.className = "bg-white rounded-lg border-2 border-gray-300 shadow-sm p-4 text-left flex flex-col gap-2";
+    card.className = "bg-white rounded-lg border-2 border-gray-300 shadow-sm p-4 text-left flex flex-col gap-2 cursor-grab";
 
     // Title
     const title = document.createElement("h3");

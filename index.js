@@ -13,15 +13,20 @@ let tagColors = ["bg-red-100", "bg-green-100", "bg-blue-100", "bg-yellow-100", "
 let selectedTagColors = ["bg-red-300", "bg-green-300", "bg-blue-300", "bg-yellow-300", "bg-purple-300", "bg-pink-300"];
 
 const columnContainer = document.getElementById("columnContainer");
+
 const addCardModal = document.getElementById("addCardModal");
 const closeAddCardModalBtn = document.getElementById("closeAddCardModalBtn");
 const addCardForm = document.getElementById("addCardForm");
+
 const addColModal = document.getElementById("addColModal");
 const closeAddColModalBtn = document.getElementById("closeAddColModalBtn");
 const addColForm = document.getElementById("addCardForm");
+
 const existingTagsContainer = document.getElementById("existingTagsContainer");
 const newTagInput = document.getElementById("newTagInput");
 const addNewTagBtn = document.getElementById("addNewTagBtn");
+
+const trashEl = document.getElementById("trashcan");
 
 let draggedElement = null;
 let dragOffsetX = 0;
@@ -37,10 +42,11 @@ request.onsuccess = () => {
     db = request.result;
 
     loadBoardData().then(() => {
-        renderBoard();
-        const addColBtn = document.getElementById("addColBtn");
-        addColBtn.addEventListener("click", () => {
-            openModal(addColModal, addColForm);
+        renderBoard().then(() => {
+            const addColBtn = document.getElementById("addColBtn");
+            addColBtn.addEventListener("click", () => {
+                openModal(addColModal, addColForm);
+            });
         });
     });
 }
@@ -213,7 +219,7 @@ function endDrag(event) {
     draggedElement.classList.add("cursor-grab");
 
     if (target) {
-        const newColId = target.CDATA_SECTION_NODE.columnId;
+        const newColId = target.dataset.columnId;
         const cardId = draggedElement.dataset.cardId;
 
         target.appendChild(draggedElement);
@@ -224,14 +230,14 @@ function endDrag(event) {
             const getRequest = cardsStore.get(cardId);
 
             getRequest.onsuccess = () => {
-                // const card = getRequest.result;
+                const card = getRequest.result;
 
-                // if (!card) {
-                //     console.error("Card not found:", cardId);
-                //     return;
-                // }
+                if (!card) {
+                    console.error("Card not found:", cardId);
+                    return;
+                }
 
-                cardData.columnId = newColId;
+                card.columnId = newColId;
 
                 const putRequest = cardsStore.put(card);
 
@@ -239,6 +245,8 @@ function endDrag(event) {
                     console.error("Failed to save moved card:", putRequest.error);
                     return;
                 }
+
+                draggedElement = null;
 
                 renderBoard();
             }
@@ -291,8 +299,10 @@ function closeModal(modal) {
     modal.classList.remove("flex");
 }
 
-function renderBoard() {
+async function renderBoard() {
     columnContainer.innerHTML = "";
+    await loadBoardData();
+
     columnsTab.forEach(column => {
         const columnEl = createColumnElement(column);
         columnEl.dataset.columnId = column.id;
@@ -305,7 +315,8 @@ function renderBoard() {
                     startDrag(event);
                 });
             }
-        })
+        });
+
         columnContainer.appendChild(columnEl);
     });
 
@@ -316,64 +327,6 @@ function renderBoard() {
 
     columnContainer.appendChild(addCardBtn);
 }
-
-addNewTagBtn.addEventListener("click", () => {
-    const tagName = newTagInput.value.trim();
-
-    if (!tagName) return;
-
-    const newTag = {
-        id: crypto.randomUUID(),
-        name: tagName,
-    };
-
-    allTags.push(newTag);
-    selectedTags.push(newTag.id);
-
-    newTagInput.value = "";
-    renderTagButtons();
-});
-
-addCardForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-
-    const newCard = {
-        ID: crypto.randomUUID(),
-        columnId: addCardForm.columnSelect.value,
-        title: addCardForm.title.value,
-        description: addCardForm.description.value,
-        time: Number(document.getElementById("timeInput").value),
-        tagIds: selectedTags,
-    };
-
-    cardTab.add(newCard);
-
-    renderBoard();
-    closeModal(addCardModal);
-});
-
-closeAddCardModalBtn.addEventListener("click", () => {
-    closeModal(addCardModal);
-});
-
-addColForm.addEventListener("click", (event) => {
-    event.preventDefault();
-
-    const newCategory = {
-        ID: crypto.randomUUID(),
-        title: addColForm.title.value,
-    }
-
-    columnsTab.add(newCategory);
-
-    renderBoard();
-    closeModal(addColModal);
-});
-
-closeAddColModalBtn.addEventListener("click", () => {
-    console.log(addColModal);
-    closeModal(addColModal);
-});
 
 function createColumnElement(column) {
     // Column container
@@ -471,3 +424,70 @@ function createCardElement(cardData) {
     return card;
 }
 
+addNewTagBtn.addEventListener("click", () => {
+    const tagName = newTagInput.value.trim();
+
+    if (!tagName) return;
+
+    const newTag = {
+        id: crypto.randomUUID(),
+        name: tagName,
+    };
+
+    allTags.push(newTag);
+    selectedTags.push(newTag.id);
+
+    newTagInput.value = "";
+    renderTagButtons();
+});
+
+addCardForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const newCard = {
+        ID: crypto.randomUUID(),
+        columnId: addCardForm.columnSelect.value,
+        title: addCardForm.title.value,
+        description: addCardForm.description.value,
+        time: Number(document.getElementById("timeInput").value),
+        tagIds: selectedTags,
+    };
+
+    cardTab.add(newCard);
+
+    renderBoard();
+    closeModal(addCardModal);
+});
+
+closeAddCardModalBtn.addEventListener("click", () => {
+    closeModal(addCardModal);
+});
+
+addColForm.addEventListener("click", (event) => {
+    event.preventDefault();
+
+    const newCategory = {
+        ID: crypto.randomUUID(),
+        title: addColForm.title.value,
+    }
+
+    columnsTab.add(newCategory);
+
+    renderBoard();
+    closeModal(addColModal);
+});
+
+closeAddColModalBtn.addEventListener("click", () => {
+    console.log(addColModal);
+    closeModal(addColModal);
+});
+
+trashEl.addEventListener("mouseenter", () => {
+    trashEl.src = "./assets/bin-open.png";
+    console.info(trashEl.src);
+});
+
+trashEl.addEventListener("mouseleave", () => {
+    trashEl.src = "./assets/bin-closed.png";
+    console.info(trashEl.src);
+});

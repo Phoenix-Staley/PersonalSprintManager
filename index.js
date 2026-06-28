@@ -27,6 +27,11 @@ const existingTagsContainer = document.getElementById("existingTagsContainer");
 const newTagInput = document.getElementById("newTagInput");
 const addNewTagBtn = document.getElementById("addNewTagBtn");
 
+const confirmModal = document.getElementById("confirmModal");
+const closeConfirmModalBtn = document.getElementById("closeConfirmModalBtn");
+const yesConfirmBtn = document.getElementById("yesConfirmBtn");
+const noConfirmBtn = document.getElementById("noConfirmBtn");
+
 const trashEl = document.getElementById("trashcan");
 
 let draggedElement = null;
@@ -186,7 +191,7 @@ function startDrag(event) {
     draggedElement.style.position = "fixed";
     draggedElement.style.left = `${event.clientX - dragOffsetX}px`;
     draggedElement.style.top = `${event.clientY - dragOffsetY}px`;
-    draggedElement.style.zIndex = "100";
+    draggedElement.style.zIndex = "2";
     draggedElement.style.pointerEvents = "none";
 
     draggedElement.classList.remove("cursor-grab");
@@ -201,6 +206,14 @@ function moveDrag(event) {
 
     draggedElement.style.left = `${event.clientX - dragOffsetX}px`;
     draggedElement.style.top = `${event.clientY - dragOffsetY}px`;
+
+    const elementUnderPointer = document.elementFromPoint(event.clientX, event.clientY);
+
+    if (elementUnderPointer && elementUnderPointer.id === "trashcan") {
+        elementUnderPointer.src = "./assets/bin-open.png";
+    } else {
+        trashEl.src = "./assets/bin-closed.png";
+    }
 }
 
 function endDrag(event) {
@@ -260,18 +273,29 @@ function endDrag(event) {
         }
     }
     else if (trashTarget) {
-        const cardStore = getStore("cards");
+        openModal(confirmModal);
 
-        const request = cardStore.delete(cardData.id);
+        closeConfirmModalBtn.addEventListener("click", () => {
+            closeModal(confirmModal);
+        });
 
-        request.onsuccess = () => {
-            renderBoard();
-        }
+        noConfirmBtn.addEventListener("click", () => {
+            closeModal(confirmModal);
+        });
 
-        request.onerror = () => {
-            console.error("Unable to delete card:", error);
-            renderBoard();
-        }
+        yesConfirmBtn.addEventListener("click", () => {
+            const cardStore = getStore("cards");
+            const request = cardStore.delete(cardData.id);
+
+            request.onsuccess = () => {
+                closeModal(confirmModal);
+                renderBoard();
+            }
+
+            request.onerror = () => {
+                console.error("Unable to delete card:", error);
+            }
+        });
     }
 }
 
@@ -305,6 +329,13 @@ function renderTagButtons() {
 
 function openModal(modal, form) {
     form.reset();
+    renderTagButtons();
+
+    modal.classList.remove("hidden");
+    modal.classList.add("flex");
+}
+
+function openModal(modal, form) {
     renderTagButtons();
 
     modal.classList.remove("hidden");
@@ -411,7 +442,7 @@ function createCardElement(cardData) {
     time.id = `cardTime-${cardCtn}`;
     time.classList.add("flex");
     time.classList.add("gap-2");
-    
+
     const timeLabelEl = document.createElement("h8");
     timeLabelEl.innerText = "Time (15m blocks):"
     time.appendChild(timeLabelEl);

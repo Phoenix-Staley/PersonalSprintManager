@@ -39,7 +39,7 @@
 
                 <div>
                     <label for="cardTimeInput" class="font-semibold">
-                        15-minute blocks
+                        Time Required (in minutes)
                     </label>
                     <input id="cardTimeInput" name="timeSlots" type="number" min="1" value="1" required
                         class="w-full mt-1 p-2 border-2 border-gray-300 rounded-lg" />
@@ -84,13 +84,13 @@
             <form id="addColForm" class="flex flex-col gap-4">
                 <div>
                     <label for="colTitleInput" class="font-semibold">Category Name</label>
-                    <input id="colTitleInput" type="text" required
+                    <input id="colTitleInput" name="title" type="text" required
                         class="w-full mt-1 p-2 border-2 border-gray-300 rounded-lg" />
                 </div>
 
                 <button id="submitNewColBtn" type="submit"
                     class="bg-sky-300 border-3 border-black rounded-xl p-3 font-bold cursor-pointer">
-                    Create Card
+                    Create Category
                 </button>
             </form>
         </div>

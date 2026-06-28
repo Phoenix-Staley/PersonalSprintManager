@@ -21,6 +21,7 @@ const addCardSubmitBtn = document.getElementById("createCardBtn");
 
 const addColModal = document.getElementById("addColModal");
 const closeAddColModalBtn = document.getElementById("closeAddColModalBtn");
+const submitNewCategoryBtn = document.getElementById("submitNewColBtn");
 const addColForm = document.getElementById("addColForm");
 
 const existingTagsContainer = document.getElementById("existingTagsContainer");
@@ -104,31 +105,23 @@ request.onupgradeneeded = () => {
 function seedDefaultColumns(columnsStore, cardsStore, tagsStore) {
     // starter columns
     columnsStore.add({
-        id: "todo",
-        title: "To Do",
+        id: "done",
+        title: "Done",
         order: 1,
     });
 
     columnsStore.add({
-        id: "inProgress",
-        title: "In Progress",
+        id: "chores",
+        title: "Basic Chores",
         order: 2,
     });
 
-    columnsStore.add({
-        id: "done",
-        title: "Done",
-        order: 3,
-    });
-
-    // starter card
-    const washDishesCardId = crypto.randomUUID();
-
+    // starter card/task
     cardsStore.add({
         id: washDishesCardId,
-        columnId: "done",
-        title: "Wash Dishes",
-        description: "Put them in the dishwasher",
+        columnId: "chores",
+        title: "Example Task",
+        description: "Drag me to \"Done\" to move me, or to the trash can on the bottom left to delete me",
         time: 4,
         order: 1,
     });
@@ -299,6 +292,36 @@ function endDrag(event) {
     }
 }
 
+async function renderBoard() {
+    columnContainer.innerHTML = "";
+    await loadBoardData();
+
+    columnsTab.forEach(column => {
+        const columnEl = createColumnElement(column);
+        columnEl.dataset.columnId = column.id;
+
+        cardsTab.forEach(card => {
+            if (card.columnId === column.id) {
+                const cardEl = createCardElement(card);
+                cardEl.dataset.cardId = card.id;
+                columnEl.appendChild(cardEl);
+                cardEl.addEventListener("pointerdown", (event) => {
+                    startDrag(event);
+                });
+            }
+        });
+
+        columnContainer.appendChild(columnEl);
+    });
+
+    const addCardBtn = document.createElement("button");
+    addCardBtn.id = "addColBtn";
+    addCardBtn.className = "h-32 my-16 bg-sky-200 border-3 border-black rounded-2xl cursor-pointer flex items-center justify-center flex-none";
+    addCardBtn.innerHTML = `<h2 id="addColBtn" class="font-bold text-8xl p-8">+</h2>`;
+
+    columnContainer.appendChild(addCardBtn);
+}
+
 function renderTagButtons() {
     existingTagsContainer.innerHTML = "";
 
@@ -335,7 +358,7 @@ function openModal(modal, form) {
     modal.classList.add("flex");
 }
 
-function openModal(modal, form) {
+function openModal(modal) {
     renderTagButtons();
 
     modal.classList.remove("hidden");
@@ -345,36 +368,6 @@ function openModal(modal, form) {
 function closeModal(modal) {
     modal.classList.add("hidden");
     modal.classList.remove("flex");
-}
-
-async function renderBoard() {
-    columnContainer.innerHTML = "";
-    await loadBoardData();
-
-    columnsTab.forEach(column => {
-        const columnEl = createColumnElement(column);
-        columnEl.dataset.columnId = column.id;
-
-        cardsTab.forEach(card => {
-            if (card.columnId === column.id) {
-                const cardEl = createCardElement(card);
-                cardEl.dataset.cardId = card.id;
-                columnEl.appendChild(cardEl);
-                cardEl.addEventListener("pointerdown", (event) => {
-                    startDrag(event);
-                });
-            }
-        });
-
-        columnContainer.appendChild(columnEl);
-    });
-
-    const addCardBtn = document.createElement("button");
-    addCardBtn.id = "addColBtn";
-    addCardBtn.className = "h-32 my-16 bg-sky-200 border-3 border-black rounded-2xl cursor-pointer flex items-center justify-center flex-none";
-    addCardBtn.innerHTML = `<h2 id="addColBtn" class="font-bold text-8xl p-8">+</h2>`;
-
-    columnContainer.appendChild(addCardBtn);
 }
 
 function createColumnElement(column) {
@@ -443,18 +436,22 @@ function createCardElement(cardData) {
     time.classList.add("flex");
     time.classList.add("gap-2");
 
-    const timeLabelEl = document.createElement("h8");
-    timeLabelEl.innerText = "Time (15m blocks):"
-    time.appendChild(timeLabelEl);
-
-    for (let i = 0; i < cardData.time; i++) {
+    for (let i = 0; i <= cardData.time; i++) {
         let timeBlockEl = document.createElement("div");
         timeBlockEl.classList.add("h-2");
-        timeBlockEl.classList.add("w-2");
+        if (cardData.time % 1 === 0 || (i + 1) < cardData.time) {
+            timeBlockEl.classList.add("w-2");
+        } else {
+            timeBlockEl.classList.add("w-1");
+        }
         timeBlockEl.classList.add("my-2");
         timeBlockEl.classList.add("bg-violet-700");
         time.appendChild(timeBlockEl);
     }
+
+    const timeLabelEl = document.createElement("h8");
+    timeLabelEl.innerText = `(${cardData.time * 15}m)`;
+    time.appendChild(timeLabelEl);
 
     infoContainer.appendChild(priority);
     infoContainer.appendChild(time);
@@ -515,7 +512,7 @@ addCardSubmitBtn.addEventListener("click", (event) => {
         columnId: addCardForm.dataset.columnId,
         title: addCardForm.title.value,
         description: addCardForm.description.value,
-        time: Number(addCardForm.timeSlots.value),
+        time: Number(addCardForm.timeSlots.value / 15),
         tagIds: selectedTags,
     };
     const store = getStore("cards");
@@ -530,18 +527,20 @@ closeAddCardModalBtn.addEventListener("click", () => {
     closeModal(addCardModal);
 });
 
-addColForm.addEventListener("click", (event) => {
+addColForm.addEventListener("submit", (event) => {
     event.preventDefault();
 
     const newCategory = {
-        ID: crypto.randomUUID(),
+        id: crypto.randomUUID(),
         title: addColForm.title.value,
     }
+    const store = getStore("columns");
+    const request = store.add(newCategory);
 
-    columnsTab.add(newCategory);
-
-    renderBoard();
-    closeModal(addColModal);
+    request.onsuccess = () => {
+        renderBoard();
+        closeModal(addColModal);
+    }
 });
 
 closeAddColModalBtn.addEventListener("click", () => {

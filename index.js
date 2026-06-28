@@ -118,34 +118,12 @@ function seedDefaultColumns(columnsStore, cardsStore, tagsStore) {
 
     // starter card/task
     cardsStore.add({
-        id: washDishesCardId,
+        id: crypto.randomUUID(),
         columnId: "chores",
         title: "Example Task",
         description: "Drag me to \"Done\" to move me, or to the trash can on the bottom left to delete me",
         time: 4,
         order: 1,
-    });
-
-    // starter tags
-    tagsStore.add({
-        id: crypto.randomUUID(),
-        cardId: washDishesCardId,
-        tagId: "chores",
-        name: "Chores",
-    });
-
-    tagsStore.add({
-        id: crypto.randomUUID(),
-        cardId: washDishesCardId,
-        tagId: "hygiene",
-        name: "Hygiene",
-    });
-
-    tagsStore.add({
-        id: crypto.randomUUID(),
-        cardId: washDishesCardId,
-        tagId: "home",
-        name: "Home",
     });
 }
 
@@ -512,7 +490,7 @@ addCardSubmitBtn.addEventListener("click", (event) => {
         columnId: addCardForm.dataset.columnId,
         title: addCardForm.title.value,
         description: addCardForm.description.value,
-        time: Number(addCardForm.timeSlots.value / 15),
+        time: Number(addCardForm.timeSlots.value),
         tagIds: selectedTags,
     };
     const store = getStore("cards");

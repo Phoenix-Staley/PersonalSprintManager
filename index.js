@@ -207,8 +207,8 @@ function endDrag(event) {
     if (!draggedElement) return;
 
     const dropTarget = document.elementFromPoint(event.clientX, event.clientY);
-    const target = dropTarget?.closest("[data-column-id]");
-    console.info(dropTarget);
+    const colTarget = dropTarget?.closest("[data-column-id]");
+    const trashTarget = dropTarget.id === "trashcan" ? dropTarget : null;
 
     draggedElement.style.position = "";
     draggedElement.style.left = "";
@@ -220,13 +220,14 @@ function endDrag(event) {
     draggedElement.classList.remove("cursor-grabbing", "opacity-80");
     draggedElement.classList.add("cursor-grab");
 
-    if (target) {
-        const newColId = target.dataset.columnId;
-        const cardId = draggedElement.dataset.cardId;
+    const cardId = draggedElement.dataset.cardId;
+    const cardData = cardsTab.find((card) => card.id === cardId);
 
-        target.appendChild(draggedElement);
+    if (colTarget) {
+        const newColId = colTarget.dataset.columnId;
 
-        const cardData = cardsTab.find((card) => card.id === cardId);
+        colTarget.appendChild(draggedElement);
+
         if (cardData) {
             const cardsStore = getStore("cards");
             const getRequest = cardsStore.get(cardId);
@@ -256,6 +257,20 @@ function endDrag(event) {
             getRequest.onerror = () => {
                 console.error("Failed to get card:", getRequest.error);
             }
+        }
+    }
+    else if (trashTarget) {
+        const cardStore = getStore("cards");
+
+        const request = cardStore.delete(cardData.id);
+
+        request.onsuccess = () => {
+            renderBoard();
+        }
+
+        request.onerror = () => {
+            console.error("Unable to delete card:", error);
+            renderBoard();
         }
     }
 }
@@ -436,8 +451,7 @@ addNewTagBtn.addEventListener("click", () => {
         id: crypto.randomUUID(),
         name: tagName,
     };
-    const transaction = db.transaction("tags", "readwrite");
-    const store = transaction.objectStore("tags");
+    const store = getStore("tags");
 
     const request = store.add(newTag);
     selectedTags.push(newTag.id);
@@ -473,8 +487,7 @@ addCardSubmitBtn.addEventListener("click", (event) => {
         time: Number(addCardForm.timeSlots.value),
         tagIds: selectedTags,
     };
-    const transaction = db.transaction("cards", "readwrite");
-    const store = transaction.objectStore("cards");
+    const store = getStore("cards");
 
     store.add(newCard);
 
@@ -507,10 +520,8 @@ closeAddColModalBtn.addEventListener("click", () => {
 
 trashEl.addEventListener("mouseenter", () => {
     trashEl.src = "./assets/bin-open.png";
-    console.info(trashEl.src);
 });
 
 trashEl.addEventListener("mouseleave", () => {
     trashEl.src = "./assets/bin-closed.png";
-    console.info(trashEl.src);
 });

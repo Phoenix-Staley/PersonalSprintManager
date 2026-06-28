@@ -1,4 +1,4 @@
-// INITIALIZATION
+// ***INITIALIZATION***
 
 const DB_NAME = "sprint_manager";
 const DB_VERSION = 1;
@@ -89,7 +89,7 @@ request.onupgradeneeded = () => {
 
 
 
-// ACTIVE LOGIC
+// ***ACTIVE LOGIC***
 
 
 
@@ -100,7 +100,9 @@ request.onupgradeneeded = () => {
 
 
 
-// HELPER FUNCTIONS
+// ***HELPER FUNCTIONS***
+
+// Database interaction handling
 
 function seedDefaultColumns(columnsStore, cardsStore, tagsStore) {
     // starter columns
@@ -121,7 +123,7 @@ function seedDefaultColumns(columnsStore, cardsStore, tagsStore) {
         id: crypto.randomUUID(),
         columnId: "chores",
         title: "Example Task",
-        description: "Drag me to \"Done\" to move me, or to the trash can on the bottom left to delete me",
+        description: "Drag me to \"Done\" to move me to that category, or to the trash can on the bottom left to delete me",
         time: 4,
         order: 1,
     });
@@ -147,6 +149,10 @@ async function loadBoardData() {
     cardsTab = await getAllFromStore("cards");
     tagsTab = await getAllFromStore("tags");
 }
+
+
+
+// Click and drag handling
 
 function startDrag(event) {
     draggedElement = event.currentTarget;
@@ -270,6 +276,10 @@ function endDrag(event) {
     }
 }
 
+
+
+// Rendering
+
 async function renderBoard() {
     columnContainer.innerHTML = "";
     await loadBoardData();
@@ -292,12 +302,19 @@ async function renderBoard() {
         columnContainer.appendChild(columnEl);
     });
 
-    const addCardBtn = document.createElement("button");
-    addCardBtn.id = "addColBtn";
-    addCardBtn.className = "h-32 my-16 bg-sky-200 border-3 border-black rounded-2xl cursor-pointer flex items-center justify-center flex-none";
-    addCardBtn.innerHTML = `<h2 id="addColBtn" class="font-bold text-8xl p-8">+</h2>`;
+    const addCategoryCol = document.createElement("div");
+    addCategoryCol.classList = "flex flex-none"
+    const addCategoryLabel = document.createElement("h6");
+    addCategoryLabel.innerText = "New category";
+    addCategoryCol.className = "font-bold text-xl flex flex-col items-center bg-primary-gray rounded-xl mb-32 p-2 text-mist-400";
+    const addColBtn = document.createElement("button");
+    addColBtn.id = "addColBtn";
+    addColBtn.className = "size-12 my-5 bg-radial from-teal-500 to-teal-700 border-black border-3 rounded-xl cursor-pointer flex items-center justify-center flex-none";
+    addColBtn.innerHTML = `<h2 id="addColBtn" class="font-bold text-black text-3xl p-2">+</h2>`;
 
-    columnContainer.appendChild(addCardBtn);
+    addCategoryCol.appendChild(addCategoryLabel);
+    addCategoryCol.appendChild(addColBtn);
+    columnContainer.appendChild(addCategoryCol);
 }
 
 function renderTagButtons() {
@@ -328,6 +345,10 @@ function renderTagButtons() {
     });
 }
 
+
+
+// Modal handling
+
 function openModal(modal, form) {
     form.reset();
     renderTagButtons();
@@ -348,16 +369,20 @@ function closeModal(modal) {
     modal.classList.remove("flex");
 }
 
+
+
+// Element generation
+
 function createColumnElement(column) {
     // Column container
     const columnDiv = document.createElement("div");
     columnDiv.id = `column-${column.id}`;
-    columnDiv.className = "bg-gray-200 rounded-xl p-4 flex-1 flex flex-col flex-auto gap-4";
+    columnDiv.className = "bg-primary-gray rounded-xl p-4 flex-1 flex flex-col flex-auto gap-4 min-w-70";
 
     // Column header
     const headerCont = document.createElement("div");
     headerCont.id = `columnHeader-${column.id}`;
-    headerCont.className = "relative bg-sky-200 rounded-xl border-3 border-black p-4";
+    headerCont.className = "relative bg-primary-green text-white rounded-xl border-3 border-black p-4";
 
     const header = document.createElement("h2");
     header.id = `columnTitle-${column.id}`;
@@ -366,8 +391,8 @@ function createColumnElement(column) {
 
     const addCardBtn = document.createElement("button");
     addCardBtn.id = `addCardBtn-${column.id}`;
-    addCardBtn.className = "absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-sky-300 border-3 border-black rounded-xl cursor-pointer flex items-center justify-center";
-    addCardBtn.innerHTML = `<h2 class="font-bold text-3xl">+</h2>`;
+    addCardBtn.className = "absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-radial from-teal-500 to-teal-700 border-3 border-black rounded-xl cursor-pointer flex items-center justify-center";
+    addCardBtn.innerHTML = `<h2 class="font-bold text-black bg- text-3xl">+</h2>`;
 
     columnDiv.appendChild(headerCont);
     headerCont.appendChild(header);
@@ -385,7 +410,7 @@ function createCardElement(cardData) {
     // Card container
     const card = document.createElement("div");
     card.id = `card-${++cardCtn}`;
-    card.className = "bg-white rounded-lg border-2 border-gray-300 shadow-sm p-4 text-left flex flex-col gap-2 cursor-grab";
+    card.className = "bg-white font-bold bg-mauve-to-pink rounded-lg border-2 border-gray-300 shadow-sm p-3 text-left flex flex-col gap-2 cursor-grab";
 
     // Title
     const title = document.createElement("h3");
@@ -396,7 +421,7 @@ function createCardElement(cardData) {
     // Description
     const description = document.createElement("p");
     description.id = `cardDescription-${cardCtn}`;
-    description.className = "text-gray-600 text-sm mt-2";
+    description.className = "text-gray-900 text-sm mt-2";
     description.textContent = cardData.description;
 
     // Priority / Time container
@@ -411,8 +436,7 @@ function createCardElement(cardData) {
     // Time span
     const time = document.createElement("span");
     time.id = `cardTime-${cardCtn}`;
-    time.classList.add("flex");
-    time.classList.add("gap-2");
+    time.classList = "font-bold flex gap-2";
 
     for (let i = 0; i <= cardData.time; i++) {
         let timeBlockEl = document.createElement("div");
@@ -447,6 +471,10 @@ function createCardElement(cardData) {
 
     return card;
 }
+
+
+
+// Event listeners
 
 addNewTagBtn.addEventListener("click", () => {
     const tagName = newTagInput.value.trim();

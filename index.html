@@ -1,16 +1,22 @@
 <!doctype html>
-<html>
+<html class="min-h-full flex max-w-screen">
 
 <head>
     <title>Personal Sprint Manager</title>
     <link type="image/png" sizes="96x96" rel="icon" href="./assets/sprint-icon.png">
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="./index.css">
 </head>
 
-<body>
-    <div class="p-4 m-4">
-        <div class="overflow-x-auto shadow rounded-xl border-3 border-gray-400">
-            <div class="flex gap-4 p-2" id="columnContainer"></div>
+<body class="flex flex-col flex-1 bg-primary-gray">
+    <header class="w-full text-center py-6 bg-mauve-to-pink opacity-80 text-3xl font-bold border-black border-b-3">
+        Task Manager
+        for ADHD Minds
+    </header>
+
+    <div class="p-4 m-4 flex flex-col flex-1 bg-primary-green rounded-2xl">
+        <div class="overflow-x-auto shadow rounded-xl flex-1">
+            <div class="flex gap-4 p-2 size-full flex-wrap" id="columnContainer"></div>
         </div>
     </div>
 
@@ -116,7 +122,7 @@
     </div>
 
     <img id="trashcan" src="./assets/bin-closed.png" title="delete icons"
-        class="fixed right-0 bottom-0 w-16 h-16 m-8 p-2 bg-red-300 border-black border-3 rounded-2xl z-3"></img>
+        class="fixed right-0 bottom-0 w-16 h-16 my-16 mx-20 p-2 bg-red-300 border-black border-3 rounded-2xl z-3"></img>
 </body>
 <script src="./index.js"></script>
 

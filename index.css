@@ -1,0 +1,33 @@
+:root {
+    --primary-pink: #E3C0D3;
+    --secondary-pink: #95818D;
+    --primary-gray: #1A1423;
+    --primary-green: #00765B;
+    --secondary-green: #3E5641;
+}
+
+.bg-primary-pink {
+    background-color: var(--primary-pink);
+}
+
+.bg-secondary-pink {
+    background-color: var(--secondary-pink);
+}
+
+.bg-primary-gray {
+    background-color: var(--primary-gray);
+}
+
+.bg-primary-green {
+    background-color: var(--primary-green);
+}
+
+.bg-secondary-green {
+    background-color: var(--secondary-green);
+}
+
+.bg-mauve-to-pink {
+    background-image: linear-gradient(to bottom, var(--primary-pink), var(--secondary-pink));
+    opacity: 60%;
+    color: var(--primary-gray);
+}

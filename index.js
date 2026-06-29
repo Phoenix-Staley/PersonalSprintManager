@@ -10,7 +10,7 @@ let cardsTab;
 let tagsTab;
 let selectedTags = [];
 let tagColors = ["bg-red-200", "bg-green-200", "bg-blue-200", "bg-yellow-100", "bg-purple-200", "bg-pink-200"];
-let selectedTagColors = ["bg-red-300", "bg-green-300", "bg-blue-300", "bg-yellow-200", "bg-purple-300", "bg-pink-300"];
+let selectedTagColors = ["bg-red-400", "bg-green-400", "bg-blue-400", "bg-yellow-300", "bg-purple-400", "bg-pink-400"];
 
 const columnContainer = document.getElementById("columnContainer");
 
@@ -329,7 +329,7 @@ function renderTagButtons() {
 
         button.className = isSelected
             ? `border-2 border-black rounded px-2 py-1 m-1 cursor-pointer focus:opacity-70 ${selectedTagColors[tagsTab.indexOf(tag) % selectedTagColors.length]}`
-            : `border-2 rounded px-2 py-1 m-1 cursor-pointer focus:opacity-70 ${tagColors[tagsTab.indexOf(tag) % tagColors.length]}`;
+            : `border-2 rounded px-2 py-1 m-1 cursor-pointer focus:opacity-50 opacity-70 ${tagColors[tagsTab.indexOf(tag) % tagColors.length]}`;
 
         button.addEventListener("click", () => {
             if (selectedTags.includes(tag.id)) {
@@ -382,7 +382,7 @@ function createColumnElement(column) {
     // Column header
     const headerCont = document.createElement("div");
     headerCont.id = `columnHeader-${column.id}`;
-    headerCont.className = "relative bg-primary-green text-white rounded-xl border-3 border-black p-4";
+    headerCont.className = "relative bg-radial from-teal-700 to-teal-900 from-60% text-black rounded-xl border-3 border-black p-4";
 
     const header = document.createElement("h2");
     header.id = `columnTitle-${column.id}`;
@@ -391,8 +391,8 @@ function createColumnElement(column) {
 
     const addCardBtn = document.createElement("button");
     addCardBtn.id = `addCardBtn-${column.id}`;
-    addCardBtn.className = "absolute right-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-radial from-teal-500 to-teal-700 border-3 border-black rounded-xl cursor-pointer flex items-center justify-center";
-    addCardBtn.innerHTML = `<h2 class="font-bold text-black bg- text-3xl">+</h2>`;
+    addCardBtn.className = "absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-radial from-emerald-500 to-emerald-600 opacity-60 to-70% border-3 border-black rounded-xl cursor-pointer flex items-center justify-center";
+    addCardBtn.innerHTML = `<h2 class="font-bold text-black text-3xl">+</h2>`;
 
     columnDiv.appendChild(headerCont);
     headerCont.appendChild(header);

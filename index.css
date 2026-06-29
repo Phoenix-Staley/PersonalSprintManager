@@ -2,6 +2,7 @@
     --primary-pink: #E3C0D3;
     --secondary-pink: #95818D;
     --primary-gray: #1A1423;
+    --secondary-gray: #50495f;
     --primary-green: #00765B;
     --secondary-green: #3E5641;
 }
@@ -16,6 +17,10 @@
 
 .bg-primary-gray {
     background-color: var(--primary-gray);
+}
+
+.bg-secondary-gray {
+    background-color: var(--secondary-gray);
 }
 
 .bg-primary-green {

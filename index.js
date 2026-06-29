@@ -74,6 +74,7 @@ request.onupgradeneeded = () => {
     });
 
     cardsStore.createIndex("cardId", "cardId", { unique: false });
+    cardsStore.createIndex("tagIds", "tags", { unique: false });
 
     const tagsStore = db.createObjectStore("tags", {
         keyPath: "id"
@@ -128,7 +129,28 @@ function seedDefaultColumns(columnsStore, cardsStore, tagsStore) {
         columnId: "chores",
         title: "Example Task",
         description: "Drag me to \"Done\" to move me to that category, or to the trash can on the bottom left to delete me",
+        tagIds: [],
         time: 4,
+        order: 1,
+    });
+
+    cardsStore.add({
+        id: crypto.randomUUID(),
+        columnId: "done",
+        title: "Create your own categories -->",
+        description: "Just name your category and a new column will be added",
+        tagIds: [],
+        time: 0.5,
+        order: 1,
+    });
+
+    cardsStore.add({
+        id: crypto.randomUUID(),
+        columnId: "chores",
+        title: "Advance settings",
+        description: "You can delete categories or reset your board back to the default by pressing the cog wheel on the top right of your screen",
+        tagIds: [],
+        time: 1.5,
         order: 1,
     });
 }
@@ -138,7 +160,7 @@ function getStore(storeName, mode = "readwrite") {
     return transaction.objectStore(storeName);
 }
 
-function getAllFromStore(storeName) {
+async function getAllFromStore(storeName) {
     return new Promise((resolve, reject) => {
         const store = getStore(storeName);
         const request = store.getAll();
@@ -448,15 +470,28 @@ function createCardElement(cardData) {
     infoContainer.className = "flex justify-between mt-4 text-sm";
 
     // Priority span
-    const priority = document.createElement("span");
-    priority.id = `cardPriority-${cardCtn}`;
+    const tags = document.createElement("span");
+    tags.id = `cardTag-${cardCtn}`;
+    for (let i = 0; i < cardData.tagIds.length; i++) {
+        const request = getAllFromStore("tags");
+
+        request.then((result) => {
+            const tag = result.filter((tag) => tag.id === cardData.tagIds[i])[0];
+            const tagDisplay = document.createElement("p");
+
+            tagDisplay.textContent = tag["name"];
+            tagDisplay.className = `border-2 rounded px-2 py-1 m-1 focus:opacity-70 ${tagColors[result.indexOf(tag) % tagColors.length]}`;
+
+            tags.appendChild(tagDisplay);
+        });
+    }
 
     // Time span
     const time = document.createElement("span");
     time.id = `cardTime-${cardCtn}`;
     time.classList = "font-bold flex gap-2";
 
-    for (let i = 0; i <= cardData.time; i++) {
+    for (let i = 0; i < cardData.time; i++) {
         let timeBlockEl = document.createElement("div");
         timeBlockEl.classList.add("h-2");
         if (cardData.time % 1 === 0 || (i + 1) < cardData.time) {

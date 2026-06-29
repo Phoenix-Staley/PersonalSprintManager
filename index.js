@@ -5,6 +5,7 @@ const DB_VERSION = 1;
 
 let db;
 let cardCtn = 0;
+let cardData;
 let columnsTab;
 let cardsTab;
 let tagsTab;
@@ -30,11 +31,19 @@ const addNewTagBtn = document.getElementById("addNewTagBtn");
 
 const confirmModal = document.getElementById("confirmModal");
 const closeConfirmModalBtn = document.getElementById("closeConfirmModalBtn");
-const yesConfirmBtn = document.getElementById("yesConfirmBtn");
+let yesConfirmBtn = document.getElementById("yesConfirmBtn"); // Mutable because the confirmation modal is used for multiple purposes
 const noConfirmBtn = document.getElementById("noConfirmBtn");
+
+const categoryTableBody = document.getElementById("categoryTableBody");
+const resetBtn = document.getElementById("resetBtn");
 
 const trashEl = document.getElementById("trashcan");
 const stopAskingBox = document.getElementById("stopConfirmingBox");
+const stopConfirmingPrompt = document.getElementById("stopConfirmingPrompt");
+
+const settingsModal = document.getElementById("settingsModal");
+const settingsBtn = document.getElementById("settingsBtn");
+const closeSettingsBtn = document.getElementById("closeSettingsBtn");
 
 let draggedElement = null;
 let dragOffsetX = 0;
@@ -67,7 +76,7 @@ request.onupgradeneeded = () => {
         keyPath: "id"
     });
 
-    columnsStore.createIndex("order", "order", { unique: false });
+    columnsStore.createIndex("order", "order", { unique: true });
 
     const cardsStore = db.createObjectStore("cards", {
         keyPath: "id"
@@ -112,13 +121,13 @@ request.onupgradeneeded = () => {
 function seedDefaultColumns(columnsStore, cardsStore, tagsStore) {
     // starter columns
     columnsStore.add({
-        id: "done",
+        id: crypto.randomUUID(),
         title: "Done",
         order: 1,
     });
 
     columnsStore.add({
-        id: "chores",
+        id: crypto.randomUUID(),
         title: "Basic Chores",
         order: 2,
     });
@@ -138,7 +147,7 @@ function seedDefaultColumns(columnsStore, cardsStore, tagsStore) {
         id: crypto.randomUUID(),
         columnId: "done",
         title: "Create your own categories -->",
-        description: "Just name your category and a new column will be added",
+        description: "Just name your category and a new column will be added! You can even create your own tasks and tags by pressing the \"+\" at the top left of a category",
         tagIds: [],
         time: 0.5,
         order: 1,
@@ -148,7 +157,7 @@ function seedDefaultColumns(columnsStore, cardsStore, tagsStore) {
         id: crypto.randomUUID(),
         columnId: "chores",
         title: "Advance settings",
-        description: "You can delete categories or reset your board back to the default by pressing the cog wheel on the top right of your screen",
+        description: "You can delete categories or reset your board back to the default by pressing the button on the top right of your screen",
         tagIds: [],
         time: 1.5,
         order: 1,
@@ -291,6 +300,8 @@ function endDrag(event) {
         }
     }
     else if (trashTarget && !stopAsking) {
+        yesConfirmBtn = removeListeners(yesConfirmBtn);
+
         openModal(confirmModal);
 
         closeConfirmModalBtn.addEventListener("click", () => {
@@ -385,6 +396,10 @@ function renderTagButtons() {
     });
 }
 
+function resetTrashIcon() {
+    trashEl.src = "./assets/bin-closed.png";
+}
+
 
 
 // Modal handling
@@ -406,7 +421,37 @@ function openModal(modal) {
 
 function closeModal(modal) {
     modal.classList.add("hidden");
-    modal.classList.remove("flex");
+    resetTrashIcon();
+}
+
+function closeConfirmModal() {
+    closeModal(confirmModal);
+    yesConfirmBtn = removeListeners(yesConfirmBtn);
+    stopConfirmingPrompt.classList.remove("hidden");
+}
+
+function openResetConfirmation() {
+    stopConfirmingPrompt.classList.add("hidden");
+    confirmModal.classList.remove("hidden");
+}
+
+function closeModalAfterReset(isConfirmed) {
+    if (isConfirmed) {
+        document.indexedDB.deleteDatabase("sprint_manager");
+        document.location.reload();
+        return;
+    }
+
+    closeModal(confirmModal);
+    yesConfirmBtn = removeListeners(yesConfirmBtn);
+    stopConfirmingPrompt.classList.remove("hidden");
+}
+
+function removeListeners(oldElement) {
+    const newElement = oldElement.cloneNode(true);
+    oldElement.parentElement.replaceChild(newElement, oldElement);
+
+    return newElement;
 }
 
 
@@ -605,8 +650,15 @@ addColForm.addEventListener("submit", (event) => {
 });
 
 closeAddColModalBtn.addEventListener("click", () => {
-    console.log(addColModal);
+    addColForm.reset();
     closeModal(addColModal);
+});
+
+closeConfirmModalBtn.addEventListener("click", closeConfirmModal);
+
+noConfirmBtn.addEventListener("click", (event) => {
+    event.preventDefault();
+    closeConfirmModal();
 });
 
 trashEl.addEventListener("mouseenter", () => {
@@ -615,4 +667,20 @@ trashEl.addEventListener("mouseenter", () => {
 
 trashEl.addEventListener("mouseleave", () => {
     trashEl.src = "./assets/bin-closed.png";
+});
+
+settingsBtn.addEventListener("click", () => {
+    openModal(settingsModal);
+});
+
+closeSettingsBtn.addEventListener("click", () => {
+    closeModal(settingsModal);
+});
+
+resetBtn.addEventListener("click", () => {
+    yesConfirmBtn = removeListeners(yesConfirmBtn);
+    yesConfirmBtn.addEventListener("click", () => {
+        closeModalAfterReset(true);
+    });
+    openResetConfirmation(confirmModal);
 });

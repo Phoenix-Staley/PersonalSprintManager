@@ -34,5 +34,40 @@
 .bg-mauve-to-pink {
     background-image: linear-gradient(to bottom, var(--primary-pink), var(--secondary-pink));
     opacity: 60%;
-    color: var(--primary-gray);
+}
+
+.modal {
+    background-color: var(--secondary-pink);
+}
+
+th,
+td,
+tr {
+    padding: 8px 0 8px 24px;
+}
+
+th,
+tr,
+tbody,
+table {
+    min-width: 100%;
+}
+
+table {
+    background-color: rgba(64, 224, 208, 0.124);
+}
+
+tr {
+    cursor: grab;
+    position: relative;
+    border-top: 1px solid black;
+}
+
+tr:hover {
+    background-color: rgba(40, 139, 131, 0.299);
+}
+
+thead {
+    /* background-color: rgba(112, 128, 144, 0.319); */
+    border-bottom: 3px solid black;
 }

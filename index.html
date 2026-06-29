@@ -112,13 +112,19 @@
                 </button>
             </div>
 
-            <form class="flex flex-row flex-auto gap-4">
+            <form class="flex flex-col flex-auto gap-4">
                 <button id="yesConfirmBtn"
                     class="bg-red-300 border-3 border-black rounded-xl p-3 font-bold cursor-pointer flex-1">Yes</button>
 
                 <button id="noConfirmBtn"
                     class="bg-green-200 border-3 border-black rounded-xl p-3 font-bold cursor-pointer flex-1">No</button>
+
+                <div class="flex flex-row justify-center">
+                    <p class="mx-2 text-lg">Stop asking me</p>
+                    <input type="checkbox" id="stopConfirmingBox" class="mx-2 border-3 border-black w-8">
+                </div>
         </div>
+
     </div>
 
     <img id="trashcan" src="./assets/bin-closed.png" title="delete icons"

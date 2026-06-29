@@ -34,10 +34,12 @@ const yesConfirmBtn = document.getElementById("yesConfirmBtn");
 const noConfirmBtn = document.getElementById("noConfirmBtn");
 
 const trashEl = document.getElementById("trashcan");
+const stopAskingBox = document.getElementById("stopConfirmingBox");
 
 let draggedElement = null;
 let dragOffsetX = 0;
 let dragOffsetY = 0;
+let stopAsking = false;
 
 const request = indexedDB.open(DB_NAME, DB_VERSION);
 
@@ -79,6 +81,8 @@ request.onupgradeneeded = () => {
 
     tagsStore.createIndex("tagId", "tagId", { unique: true });
     tagsStore.createIndex("name", "name", { unique: true });
+
+    document.cookie = "stopAsking=false; SameSite=None; Secure";
 
     seedDefaultColumns(columnsStore, cardsStore, tagsStore);
 }
@@ -150,6 +154,20 @@ async function loadBoardData() {
     tagsTab = await getAllFromStore("tags");
 }
 
+function removeCard(cardData) {
+    const cardStore = getStore("cards");
+    const request = cardStore.delete(cardData.id);
+
+    request.onsuccess = () => {
+        closeModal(confirmModal);
+        renderBoard();
+    }
+
+    request.onerror = () => {
+        console.error("Unable to delete card:", error);
+    }
+}
+
 
 
 // Click and drag handling
@@ -212,6 +230,7 @@ function endDrag(event) {
 
     const cardId = draggedElement.dataset.cardId;
     const cardData = cardsTab.find((card) => card.id === cardId);
+    stopAsking = document.cookie.split("; ").find((row) => row.startsWith("stopAsking"))?.split("=")[1] === "true";
 
     if (colTarget) {
         const newColId = colTarget.dataset.columnId;
@@ -249,7 +268,7 @@ function endDrag(event) {
             }
         }
     }
-    else if (trashTarget) {
+    else if (trashTarget && !stopAsking) {
         openModal(confirmModal);
 
         closeConfirmModalBtn.addEventListener("click", () => {
@@ -261,19 +280,18 @@ function endDrag(event) {
         });
 
         yesConfirmBtn.addEventListener("click", () => {
-            const cardStore = getStore("cards");
-            const request = cardStore.delete(cardData.id);
+            removeCard(cardData);
 
-            request.onsuccess = () => {
-                closeModal(confirmModal);
-                renderBoard();
-            }
-
-            request.onerror = () => {
-                console.error("Unable to delete card:", error);
+            if (stopAskingBox.checked) {
+                document.cookie = "stopAsking=true; SameSite=None; Secure";
             }
         });
+    } else if (trashTarget && stopAsking) {
+        removeCard(cardData);
     }
+
+    document.removeEventListener("pointermove", moveDrag);
+    document.removeEventListener("pointerup", endDrag);
 }
 
 
@@ -455,7 +473,7 @@ function createCardElement(cardData) {
     timeLabelEl.innerText = `(${cardData.time * 15}m)`;
     time.appendChild(timeLabelEl);
 
-    infoContainer.appendChild(priority);
+    infoContainer.appendChild(tags);
     infoContainer.appendChild(time);
 
     // Tags container
@@ -524,6 +542,8 @@ addCardSubmitBtn.addEventListener("click", (event) => {
     const store = getStore("cards");
 
     store.add(newCard);
+
+    addCardForm.reset();
 
     renderBoard();
     closeModal(addCardModal);

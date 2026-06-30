@@ -123,47 +123,51 @@ request.onupgradeneeded = () => {
 
 function seedDefaultColumns(columnsStore, cardsStore, tagsStore) {
     // starter columns
-    columnsStore.add({
+    const doneColRequest = columnsStore.add({
         id: crypto.randomUUID(),
         title: "Done",
         order: 1,
     });
 
-    columnsStore.add({
+    doneColRequest.onsuccess((event) => {
+        cardsStore.add({
+            id: crypto.randomUUID(),
+            columnId: event.result.id,
+            title: "Create your own categories -->",
+            description: "Just name your category and a new column will be added! You can even create your own tasks and tags by pressing the \"+\" at the top left of a category",
+            tagIds: [],
+            time: 0.5,
+            order: 1,
+        });
+    });
+
+    const choresColRequest = columnsStore.add({
         id: crypto.randomUUID(),
         title: "Basic Chores",
         order: 2,
     });
 
-    // starter card/task
-    cardsStore.add({
-        id: crypto.randomUUID(),
-        columnId: "chores",
-        title: "Example Task",
-        description: "Drag me to \"Done\" to move me to that category, or to the trash can on the bottom left to delete me",
-        tagIds: [],
-        time: 4,
-        order: 1,
-    });
+    choresColRequest.onsuccess((event) => {
+        // starter card/task
+        cardsStore.add({
+            id: crypto.randomUUID(),
+            columnId: event.result.id,
+            title: "Example Task",
+            description: "Drag me to \"Done\" to move me to that category, or to the trash can on the bottom left to delete me",
+            tagIds: [],
+            time: 4,
+            order: 1,
+        });
 
-    cardsStore.add({
-        id: crypto.randomUUID(),
-        columnId: "done",
-        title: "Create your own categories -->",
-        description: "Just name your category and a new column will be added! You can even create your own tasks and tags by pressing the \"+\" at the top left of a category",
-        tagIds: [],
-        time: 0.5,
-        order: 1,
-    });
-
-    cardsStore.add({
-        id: crypto.randomUUID(),
-        columnId: "chores",
-        title: "Advance settings",
-        description: "You can delete categories or reset your board back to the default by pressing the button on the top right of your screen",
-        tagIds: [],
-        time: 1.5,
-        order: 1,
+        cardsStore.add({
+            id: crypto.randomUUID(),
+            columnId: event.result.id,
+            title: "Advance settings",
+            description: "You can delete categories or reset your board back to the default by pressing the button on the top right of your screen",
+            tagIds: [],
+            time: 1.5,
+            order: 1,
+        });
     });
 }
 

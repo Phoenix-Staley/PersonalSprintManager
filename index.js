@@ -49,6 +49,9 @@ let draggedElement = null;
 let dragOffsetX = 0;
 let dragOffsetY = 0;
 let stopAsking = false;
+let endDragHandler = (event) => {
+    endDrag(event, handleCardDrag);
+};
 
 const request = indexedDB.open(DB_NAME, DB_VERSION);
 
@@ -191,7 +194,7 @@ function removeCard(cardData) {
 
     request.onsuccess = () => {
         closeModal(confirmModal);
-        renderBoard();
+        // renderBoard();
     }
 
     request.onerror = () => {
@@ -223,8 +226,13 @@ function startDrag(event) {
     draggedElement.classList.remove("cursor-grab");
     draggedElement.classList.add("cursor-grabbing", "opacity-80");
 
+    endDragHandler = (event) => {
+        endDrag(event, () => {
+            handleCardDrag(event);
+        });
+    };
     document.addEventListener("pointermove", moveDrag);
-    document.addEventListener("pointerup", endDrag);
+    document.addEventListener("pointerup", endDragHandler);
 }
 
 function moveDrag(event) {
@@ -242,7 +250,20 @@ function moveDrag(event) {
     }
 }
 
-function endDrag(event) {
+function endDrag(event, handler) {
+    if (!draggedElement) return;
+
+    handler(event).then(() => {
+        loadBoardData().then(() => {
+            renderBoard();
+            // renderTable();
+
+            document.removeEventListener(endDragHandler);
+        });
+    });
+}
+
+async function handleCardDrag(event) {
     if (!draggedElement) return;
 
     const dropTarget = document.elementFromPoint(event.clientX, event.clientY);
@@ -290,8 +311,6 @@ function endDrag(event) {
                 }
 
                 draggedElement = null;
-
-                renderBoard();
             }
 
             getRequest.onerror = () => {
@@ -322,9 +341,6 @@ function endDrag(event) {
     } else if (trashTarget && stopAsking) {
         removeCard(cardData);
     }
-
-    document.removeEventListener("pointermove", moveDrag);
-    document.removeEventListener("pointerup", endDrag);
 }
 
 
@@ -357,7 +373,7 @@ async function renderBoard() {
     addCategoryCol.classList = "flex flex-none"
     const addCategoryLabel = document.createElement("h6");
     addCategoryLabel.innerText = "New category";
-    addCategoryCol.className = "font-bold text-xl flex flex-col items-center bg-primary-gray rounded-xl mb-32 p-2 text-mist-400";
+    addCategoryCol.className = "font-bold text-xl flex flex-col items-center bg-primary-gray rounded-xl max-h-36 p-2 text-mist-400";
     const addColBtn = document.createElement("button");
     addColBtn.id = "addColBtn";
     addColBtn.className = "size-12 my-5 bg-radial from-teal-500 to-teal-700 border-black border-3 rounded-xl cursor-pointer flex items-center justify-center flex-none";
@@ -462,7 +478,7 @@ function createColumnElement(column) {
     // Column container
     const columnDiv = document.createElement("div");
     columnDiv.id = `column-${column.id}`;
-    columnDiv.className = "bg-primary-gray rounded-xl p-4 flex-1 flex flex-col flex-auto gap-4 min-w-70";
+    columnDiv.className = "bg-primary-gray rounded-xl p-4 flex-1 flex flex-col flex-auto gap-4 min-w-70 max-w-200";
 
     // Column header
     const headerCont = document.createElement("div");

@@ -357,7 +357,7 @@ async function renderBoard() {
     addCategoryCol.classList = "flex flex-none"
     const addCategoryLabel = document.createElement("h6");
     addCategoryLabel.innerText = "New category";
-    addCategoryCol.className = "font-bold text-xl flex flex-col items-center bg-primary-gray rounded-xl mb-32 p-2 text-mist-400";
+    addCategoryCol.className = "font-bold text-xl flex flex-col items-center bg-primary-gray rounded-xl max-h-36 p-2 text-mist-400";
     const addColBtn = document.createElement("button");
     addColBtn.id = "addColBtn";
     addColBtn.className = "size-12 my-5 bg-radial from-teal-500 to-teal-700 border-black border-3 rounded-xl cursor-pointer flex items-center justify-center flex-none";
@@ -462,7 +462,7 @@ function createColumnElement(column) {
     // Column container
     const columnDiv = document.createElement("div");
     columnDiv.id = `column-${column.id}`;
-    columnDiv.className = "bg-primary-gray rounded-xl p-4 flex-1 flex flex-col flex-auto gap-4 min-w-70";
+    columnDiv.className = "bg-primary-gray rounded-xl p-4 flex-1 flex flex-col flex-auto gap-4 min-w-70 max-w-200";
 
     // Column header
     const headerCont = document.createElement("div");

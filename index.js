@@ -49,6 +49,9 @@ let draggedElement = null;
 let dragOffsetX = 0;
 let dragOffsetY = 0;
 let stopAsking = false;
+let endDragHandler = (event) => {
+    endDrag(event, handleCardDrag);
+};
 
 const request = indexedDB.open(DB_NAME, DB_VERSION);
 
@@ -191,7 +194,7 @@ function removeCard(cardData) {
 
     request.onsuccess = () => {
         closeModal(confirmModal);
-        renderBoard();
+        // renderBoard();
     }
 
     request.onerror = () => {
@@ -223,8 +226,13 @@ function startDrag(event) {
     draggedElement.classList.remove("cursor-grab");
     draggedElement.classList.add("cursor-grabbing", "opacity-80");
 
+    endDragHandler = (event) => {
+        endDrag(event, () => {
+            handleCardDrag(event);
+        });
+    };
     document.addEventListener("pointermove", moveDrag);
-    document.addEventListener("pointerup", endDrag);
+    document.addEventListener("pointerup", endDragHandler);
 }
 
 function moveDrag(event) {
@@ -242,7 +250,20 @@ function moveDrag(event) {
     }
 }
 
-function endDrag(event) {
+function endDrag(event, handler) {
+    if (!draggedElement) return;
+
+    handler(event).then(() => {
+        loadBoardData().then(() => {
+            renderBoard();
+            // renderTable();
+
+            document.removeEventListener(endDragHandler);
+        });
+    });
+}
+
+async function handleCardDrag(event) {
     if (!draggedElement) return;
 
     const dropTarget = document.elementFromPoint(event.clientX, event.clientY);
@@ -290,8 +311,6 @@ function endDrag(event) {
                 }
 
                 draggedElement = null;
-
-                renderBoard();
             }
 
             getRequest.onerror = () => {
@@ -322,9 +341,6 @@ function endDrag(event) {
     } else if (trashTarget && stopAsking) {
         removeCard(cardData);
     }
-
-    document.removeEventListener("pointermove", moveDrag);
-    document.removeEventListener("pointerup", endDrag);
 }
 
 
